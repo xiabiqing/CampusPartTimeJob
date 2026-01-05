@@ -1,21 +1,23 @@
-#sping配置
+# Spring项目基础配置（提交至GitHub，存放通用公共配置，无敏感信息）
 spring:
   application:
     name: CampusPartTimeJobBacked
-#允许依赖循环
+  # 允许依赖循环（通用配置，团队统一）
   main:
     allow-circular-references: true
+  # 数据源-仅保留通用驱动配置，账号/密码/地址由local本地配置覆盖
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: '用户名'
-    password: '密码'
-    url: '数据库连接地址'
+  # Redis-通用基础配置，连接地址由local本地配置覆盖
   data:
     redis:
       port: 6379
       database: 2
-      host: redis连接地址
-#服务器配置
+  # ✅ 核心关键：固定激活local环境，启动自动加载本地配置application-local.yml
+  profiles:
+    active: local
+
+# 服务器通用配置（团队统一规范）
 server:
   port: 8080
   reactive:
@@ -23,14 +25,16 @@ server:
       timeout: 86400
   servlet:
     context-path: /api
-#mybatis配置
+
+# MyBatis-Plus全局配置（团队统一规则，必须提交）
 mybatis-plus:
   global-config:
     db-config:
-      logic-delete-field: isDelete # 全局逻辑删除字段名(deleted为实体类属性名称)
-      logic-delete-value: 1 # 逻辑已删除值。可选，默认值为 1
-      logic-not-delete-value: 0 # 逻辑未删除值。可选，默认值为 0
-# springdoc-openapi项目配置
+      logic-delete-field: isDelete
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# springdoc-openapi接口文档配置（团队统一，必须提交）
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -42,5 +46,3 @@ springdoc:
     - group: 'default'
       paths-to-match: '/**'
       packages-to-scan: fun.xiabiqing.controller
-
-
