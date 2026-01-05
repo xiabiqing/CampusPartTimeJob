@@ -1,0 +1,46 @@
+#sping配置
+spring:
+  application:
+    name: CampusPartTimeJobBacked
+#允许依赖循环
+  main:
+    allow-circular-references: true
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: '用户名'
+    password: '密码'
+    url: '数据库连接地址'
+  data:
+    redis:
+      port: 6379
+      database: 2
+      host: redis连接地址
+#服务器配置
+server:
+  port: 8080
+  reactive:
+    session:
+      timeout: 86400
+  servlet:
+    context-path: /api
+#mybatis配置
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: isDelete # 全局逻辑删除字段名(deleted为实体类属性名称)
+      logic-delete-value: 1 # 逻辑已删除值。可选，默认值为 1
+      logic-not-delete-value: 0 # 逻辑未删除值。可选，默认值为 0
+# springdoc-openapi项目配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: fun.xiabiqing.controller
+
+

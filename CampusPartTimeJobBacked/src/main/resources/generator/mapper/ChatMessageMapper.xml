@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="fun.xiabiqing.mapper.ChatMessageMapper">
+
+    <resultMap id="BaseResultMap" type="fun.xiabiqing.model.domain.ChatMessage">
+            <id property="id" column="id" />
+            <result property="sendUserId" column="send_user_id" />
+            <result property="sendRole" column="send_role" />
+            <result property="receiveUserId" column="receive_user_id" />
+            <result property="receiveRole" column="receive_role" />
+            <result property="msgContent" column="msg_content" />
+            <result property="createTime" column="create_time" />
+            <result property="isDelete" column="is_delete" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,send_user_id,send_role,receive_user_id,receive_role,msg_content,
+        create_time,is_delete
+    </sql>
+</mapper>

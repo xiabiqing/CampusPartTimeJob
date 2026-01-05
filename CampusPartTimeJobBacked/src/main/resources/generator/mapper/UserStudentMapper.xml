@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="fun.xiabiqing.mapper.UserStudentMapper">
+
+    <resultMap id="BaseResultMap" type="fun.xiabiqing.model.domain.UserStudent">
+            <id property="id" column="id" />
+            <result property="userIdStu" column="user_id_stu" />
+            <result property="age" column="age" />
+            <result property="gender" column="gender" />
+            <result property="major" column="major" />
+            <result property="email" column="email" />
+            <result property="selfIntroduction" column="self_introduction" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id_stu,age,gender,major,email,
+        self_introduction
+    </sql>
+</mapper>
