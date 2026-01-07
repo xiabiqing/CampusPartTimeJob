@@ -49,6 +49,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (this.exists(userQueryWrapper)) {
             throw new BusinessException(400011, "用户名已存在");
         }
+        /*
+        密码加密单向
+         */
+        userPassword=userPassword+UserConstant.SCRET_PASSWORD;
         String newPassword = DigestUtils.md5DigestAsHex(userPassword.getBytes());
         User user = new User();
         user.setUserAccount(userAccount);
@@ -65,7 +69,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public User login(LoginUser loginUser, HttpServletRequest request) {
-        String newPassword = DigestUtils.md5DigestAsHex(loginUser.getUserPassword().getBytes());
+        String newPassword = DigestUtils.md5DigestAsHex((loginUser.getUserPassword()+UserConstant.SCRET_PASSWORD).getBytes());
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         userQueryWrapper.eq("user_account", loginUser.getUserAccount());
         userQueryWrapper.eq("user_password", newPassword);

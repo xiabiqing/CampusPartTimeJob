@@ -1,23 +1,21 @@
-# Spring项目基础配置（提交至GitHub，存放通用公共配置，无敏感信息）
+# Spring项目基础配置
 spring:
   application:
     name: CampusPartTimeJobBacked
-  # 允许依赖循环（通用配置，团队统一）
+  # 允许依赖循环
   main:
     allow-circular-references: true
-  # 数据源-仅保留通用驱动配置，账号/密码/地址由local本地配置覆盖
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-  # Redis-通用基础配置，连接地址由local本地配置覆盖
+  # Redis配置
   data:
     redis:
       port: 6379
       database: 2
-  # ✅ 核心关键：固定激活local环境，启动自动加载本地配置application-local.yml
   profiles:
     active: local
 
-# 服务器通用配置（团队统一规范）
+# 服务器通用配置
 server:
   port: 8080
   reactive:
@@ -26,15 +24,14 @@ server:
   servlet:
     context-path: /api
 
-# MyBatis-Plus全局配置（团队统一规则，必须提交）
+# MyBatis-Plus全局配置
 mybatis-plus:
   global-config:
     db-config:
       logic-delete-field: isDelete
       logic-delete-value: 1
       logic-not-delete-value: 0
-
-# springdoc-openapi接口文档配置（团队统一，必须提交）
+#knife4j配置
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

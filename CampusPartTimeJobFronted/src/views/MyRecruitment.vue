@@ -166,7 +166,24 @@ const loadData = async () => {
   try {
     const res = await getBusinessRecruitmentList()
     if (res && res.code === 200) {
-      recruitmentList.value = res.data || []
+      // 处理tags字段，确保是数组格式
+      const list = (res.data || []).map(item => {
+        // 如果tags是字符串，尝试解析为数组
+        if (item.tags && typeof item.tags === 'string') {
+          try {
+            item.tags = JSON.parse(item.tags)
+          } catch (e) {
+            console.warn('解析tags失败:', item.tags, e)
+            item.tags = []
+          }
+        }
+        // 确保tags是数组
+        if (!Array.isArray(item.tags)) {
+          item.tags = []
+        }
+        return item
+      })
+      recruitmentList.value = list
       finished.value = true
     } else {
       recruitmentList.value = []

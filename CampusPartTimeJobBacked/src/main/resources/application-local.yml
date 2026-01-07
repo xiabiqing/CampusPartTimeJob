@@ -1,7 +1,0 @@
-#sping配置
-spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: 'root'
-    password: '263240'
-    url: 'jdbc:mysql://jk:3306/CampusPartTimeJob'

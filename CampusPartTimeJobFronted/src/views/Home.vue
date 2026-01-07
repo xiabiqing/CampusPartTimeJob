@@ -4,9 +4,10 @@
     <div class="search-section">
       <van-search
         v-model="searchKeyword"
-        placeholder="搜索兼职岗位"
+        placeholder="搜索岗位描述关键词"
         @search="onSearch"
         @clear="onClear"
+        @input="onSearchInput"
       />
     </div>
 
@@ -15,8 +16,8 @@
       <div class="job-list">
         <van-empty
           v-if="!loading && filteredJobList.length === 0"
-          description="暂无兼职信息"
-          image="search"
+          :description="isSearching ? '未找到相关兼职' : '暂无兼职信息'"
+          :image="isSearching ? 'search' : 'default'"
         />
         
         <div v-else class="job-cards">
@@ -33,7 +34,7 @@
               <h3 class="job-title">{{ job.title }}</h3>
               <span class="job-salary">{{ job.salary ? job.salary + '元/小时' : '-' }}</span>
             </div>
-            <div class="job-info">
+            <div class="job-info" v-if="job.tags && Array.isArray(job.tags) && job.tags.length > 0">
               <van-tag
                 v-for="(tag, index) in job.tags"
                 :key="index"
@@ -117,6 +118,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { getRecruitmentList, sendJobApplication } from '@/api/student'
+import { searchRecruitment } from '@/api/user'
 import { showSuccessToast, showFailToast } from 'vant'
 
 const userStore = useUserStore()
@@ -125,26 +127,23 @@ const searchKeyword = ref('')
 const loading = ref(false)
 const refreshing = ref(false)
 const jobList = ref([])
+const searchResultList = ref([]) // 搜索结果列表
+const isSearching = ref(false) // 是否正在搜索
 const showApplyDialog = ref(false)
 const currentJob = ref(null)
 const applyForm = ref({
   information: ''
 })
 
-// 过滤后的兼职列表
+// 防抖定时器
+let searchTimer = null
+
+// 显示列表：如果有搜索关键词且正在搜索，显示搜索结果；否则显示全部列表
 const filteredJobList = computed(() => {
-  if (!searchKeyword.value.trim()) {
-    return jobList.value
+  if (isSearching.value && searchKeyword.value.trim()) {
+    return searchResultList.value
   }
-  const keyword = searchKeyword.value.toLowerCase()
-  return jobList.value.filter(job => {
-    return (
-      job.title?.toLowerCase().includes(keyword) ||
-      job.company?.toLowerCase().includes(keyword) ||
-      job.jobDetails?.toLowerCase().includes(keyword) ||
-      job.tags?.some(tag => tag.toLowerCase().includes(keyword))
-    )
-  })
+  return jobList.value
 })
 
 // 格式化日期
@@ -170,7 +169,24 @@ const loadJobList = async () => {
   try {
     const res = await getRecruitmentList()
     if (res && res.code === 200) {
-      jobList.value = res.data || []
+      // 处理tags字段，确保是数组格式
+      const list = (res.data || []).map(job => {
+        // 如果tags是字符串，尝试解析为数组
+        if (job.tags && typeof job.tags === 'string') {
+          try {
+            job.tags = JSON.parse(job.tags)
+          } catch (e) {
+            console.warn('解析tags失败:', job.tags, e)
+            job.tags = []
+          }
+        }
+        // 确保tags是数组
+        if (!Array.isArray(job.tags)) {
+          job.tags = []
+        }
+        return job
+      })
+      jobList.value = list
     } else {
       jobList.value = []
       showFailToast('获取兼职列表失败')
@@ -187,20 +203,98 @@ const loadJobList = async () => {
 
 // 下拉刷新
 const onRefresh = () => {
-  loadJobList()
+  if (isSearching.value && searchKeyword.value.trim()) {
+    // 如果正在搜索，刷新搜索结果
+    onSearch(searchKeyword.value)
+  } else {
+    // 否则刷新全部列表
+    loadJobList()
+  }
 }
 
-// 搜索
-const onSearch = (value) => {
-  if (!value.trim()) {
+// 搜索兼职（调用后端接口）
+const onSearch = async (value) => {
+  if (!value || !value.trim()) {
+    // 如果搜索关键词为空，显示全部列表
+    isSearching.value = false
+    searchResultList.value = []
     return
   }
-  // 搜索逻辑已在computed中实现
+  
+  loading.value = true
+  isSearching.value = true
+  
+  try {
+    const res = await searchRecruitment(value.trim())
+    if (res && res.code === 200) {
+      // 处理tags字段，确保是数组格式
+      const list = (res.data || []).map(job => {
+        // 如果tags是字符串，尝试解析为数组
+        if (job.tags && typeof job.tags === 'string') {
+          try {
+            job.tags = JSON.parse(job.tags)
+          } catch (e) {
+            console.warn('解析tags失败:', job.tags, e)
+            job.tags = []
+          }
+        }
+        // 确保tags是数组
+        if (!Array.isArray(job.tags)) {
+          job.tags = []
+        }
+        return job
+      })
+      searchResultList.value = list
+      
+      if (list.length === 0) {
+        showFailToast('未找到相关兼职')
+      }
+    } else {
+      searchResultList.value = []
+      showFailToast(res.msg || '搜索失败')
+    }
+  } catch (error) {
+    console.error('搜索失败', error)
+    searchResultList.value = []
+    showFailToast('搜索失败，请稍后重试')
+  } finally {
+    loading.value = false
+    refreshing.value = false
+  }
+}
+
+// 搜索输入（防抖处理）
+const onSearchInput = (value) => {
+  // 清除之前的定时器
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
+  
+  // 如果输入为空，立即清空搜索
+  if (!value || !value.trim()) {
+    onClear()
+    return
+  }
+  
+  // 设置防抖，500ms后执行搜索
+  searchTimer = setTimeout(() => {
+    onSearch(value)
+  }, 500)
 }
 
 // 清空搜索
 const onClear = () => {
+  // 清除防抖定时器
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+    searchTimer = null
+  }
+  
   searchKeyword.value = ''
+  isSearching.value = false
+  searchResultList.value = []
+  // 清空后重新加载全部列表
+  loadJobList()
 }
 
 // 显示申请弹窗

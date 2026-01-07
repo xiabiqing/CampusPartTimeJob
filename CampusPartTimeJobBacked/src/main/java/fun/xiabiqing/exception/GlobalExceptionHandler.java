@@ -39,7 +39,6 @@ public class GlobalExceptionHandler {
         String errorField = fieldError.getField();
         int errorCode = ErrorCode.PARAM_ERROR.getCODE();
         String errorMsg = validMsg;
-        String errorDesc = "请求字段【" + errorField + "】校验不通过";
         log.info(errorMsg);
         return ResultUtils.error(errorCode, errorMsg);
     }

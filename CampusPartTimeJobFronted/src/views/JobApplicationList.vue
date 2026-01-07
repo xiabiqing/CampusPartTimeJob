@@ -102,7 +102,7 @@ const formatDate = (dateStr) => {
 const getStatusText = (status) => {
   if (status === 0) return '申请中'
   if (status === 1) return '已同意'
-  if (status === 2) return '已拒绝'
+  if (status === 2 || status === -1) return '已拒绝'  // 兼容-1和2两种拒绝状态
   return '未知'
 }
 
@@ -110,7 +110,7 @@ const getStatusText = (status) => {
 const getStatusType = (status) => {
   if (status === 0) return 'warning'
   if (status === 1) return 'success'
-  if (status === 2) return 'danger'
+  if (status === 2 || status === -1) return 'danger'  // 兼容-1和2两种拒绝状态
   return 'default'
 }
 

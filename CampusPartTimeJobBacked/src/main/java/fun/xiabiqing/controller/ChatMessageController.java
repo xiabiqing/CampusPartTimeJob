@@ -32,7 +32,7 @@ public class ChatMessageController {
         Long targetId = Long.valueOf(targetUserId);
         
         QueryWrapper<ChatMessage> chatMessageQueryWrapper = new QueryWrapper<>();
-        // 查询条件：当前用户发送给目标用户 或 目标用户发送给当前用户
+        // 查询条件：当前用户既作为发送者，有作为接收者
         chatMessageQueryWrapper.and(wrapper -> wrapper
                         .eq("send_user_id", currentUserId)
                         .eq("receive_user_id", targetId)

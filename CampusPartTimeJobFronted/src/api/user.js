@@ -83,3 +83,18 @@ export const updateBusinessInfo = (data) => {
   })
 }
 
+/**
+ * 根据工作内容描述搜索兼职
+ * @param {string} search - 搜索关键词
+ * @returns {Promise}
+ */
+export const searchRecruitment = (search) => {
+  return request({
+    url: '/user/searchRecruitment',
+    method: 'get',
+    params: {
+      search: search
+    }
+  })
+}
+

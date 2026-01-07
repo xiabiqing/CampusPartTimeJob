@@ -6,6 +6,7 @@ import fun.xiabiqing.common.ErrorCode;
 import fun.xiabiqing.common.ResultUtils;
 import fun.xiabiqing.constant.UserConstant;
 import fun.xiabiqing.exception.BusinessException;
+import fun.xiabiqing.model.domain.Recruitment;
 import fun.xiabiqing.model.domain.RoleApplication;
 import fun.xiabiqing.model.domain.User;
 import fun.xiabiqing.model.domain.UserBusiness;
@@ -13,6 +14,7 @@ import fun.xiabiqing.model.request.LoginUser;
 import fun.xiabiqing.model.request.RegisterUser;
 import fun.xiabiqing.model.vo.UserWithBusiness;
 import fun.xiabiqing.model.vo.UserWithStudent;
+import fun.xiabiqing.service.RecruitmentService;
 import fun.xiabiqing.service.RoleApplicationService;
 import fun.xiabiqing.service.UserService;
 import fun.xiabiqing.service.UserStudentService;
@@ -32,9 +34,12 @@ public class UserController {
     private UserStudentService userStudentService;
     @Autowired
     private RoleApplicationService roleApplicationService;
+    @Autowired
+    private RecruitmentService recruitmentService;
 
     /**
      * 注册接口
+     *
      * @param registerUser 注册类
      * @return 用户id
      */
@@ -46,8 +51,9 @@ public class UserController {
 
     /**
      * 登录接口
+     *
      * @param loginUser 登录类
-     * @param request 请求
+     * @param request   请求
      * @return user
      */
     @PostMapping("/login")
@@ -58,6 +64,7 @@ public class UserController {
 
     /**
      * 修改默认信息接口(初始角色是学生)
+     *
      * @param userWithStudent
      * @param request
      * @return
@@ -71,8 +78,9 @@ public class UserController {
 
     /**
      * 修改商家信息接口
+     *
      * @param userWithBusiness 商家信息
-     * @param request 请求
+     * @param request          请求
      * @return 成功或失败
      */
     @PostMapping("/updateBusInfo")
@@ -83,13 +91,14 @@ public class UserController {
 
     /**
      * 展示所有角色申请状态
+     *
      * @param request 请求
      * @return 返回角色申请单
      */
     @GetMapping("/application")
     BaseResponse<List<RoleApplication>> getApplication(HttpServletRequest request) {
         User attribute = (User) request.getSession().getAttribute(UserConstant.USER_LOGIN_STATUS);
-        if(attribute == null) {
+        if (attribute == null) {
             throw new BusinessException(ErrorCode.NO_LOGIN);
         }
 
@@ -101,16 +110,33 @@ public class UserController {
 
     /**
      * 前端展示信息
+     *
      * @return
      */
     @GetMapping("/current")
     BaseResponse<Object> getCurrentUser(HttpServletRequest request) {
         Object o = userService.currentInfo(request);
-        if(o instanceof UserWithStudent) {
+        if (o instanceof UserWithStudent) {
             return ResultUtils.success((UserWithStudent) o);
         }
-            return ResultUtils.success((UserWithBusiness) o);
+        return ResultUtils.success((UserWithBusiness) o);
     }
 
+    /**
+     * 根据工作内容描述搜索兼职
+     *
+     * @param search 搜索的内容
+     * @return 返回所有符合的兼职
+     */
+    @GetMapping("/searchRecruitment")
+    BaseResponse<List<Recruitment>> getRecruitmentsBySearch(@RequestParam String search) {
+        if (search == null || search.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAM_NULL, "搜索内容不能为空");
+        }
+        QueryWrapper<Recruitment> recruitmentQueryWrapper = new QueryWrapper<>();
+        recruitmentQueryWrapper.and(wrapper -> wrapper.like("title", search).or().like("company", search).or().like("job_details", search));
+        List<Recruitment> list = recruitmentService.list(recruitmentQueryWrapper);
+        return ResultUtils.success(list);
+    }
 
 }

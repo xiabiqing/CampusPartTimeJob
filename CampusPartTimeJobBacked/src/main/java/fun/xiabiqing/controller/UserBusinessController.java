@@ -29,6 +29,8 @@ public class UserBusinessController {
     private RecruitmentService recruitmentService;
     @Autowired
     private UserBusinessService userBusinessService;
+    @Autowired
+    private JobApplicationService jobApplicationService;
     @PostMapping("/createMenu")
     BaseResponse<Boolean> createMenu(@Valid @RequestBody Recruitment menu, HttpServletRequest request) {
         return ResultUtils.success(recruitmentService.createMenu(menu, request));
@@ -37,7 +39,7 @@ public class UserBusinessController {
     BaseResponse<List<Tag>> getTagsList(HttpServletRequest request) {
         return ResultUtils.success(tagService.getTagsList(request));
     }
-    @GetMapping("/getMenuList")
+    @GetMapping("/getRecruList")
     BaseResponse<List<Recruitment>> getRecruitmentList(HttpServletRequest request) {
         User user = userBusinessService.checkBus(request);
         Long id = user.getId();
@@ -52,6 +54,13 @@ public class UserBusinessController {
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
         boolean result = recruitmentService.removeById(menu.getId());
+        /*
+        顺便删除所有的申请单
+         */
+        Long id = menu.getId();
+        QueryWrapper<JobApplication> jobApplicationQueryWrapper = new QueryWrapper<>();
+        jobApplicationQueryWrapper.eq("recru_id", id);
+        jobApplicationService.remove(jobApplicationQueryWrapper);
         return ResultUtils.success(result);
     }
     @PutMapping("/updateMenu")

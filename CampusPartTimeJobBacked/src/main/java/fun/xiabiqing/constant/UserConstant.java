@@ -1,6 +1,13 @@
 package fun.xiabiqing.constant;
 
 public interface UserConstant {
+    /**
+     * 密码盐值
+     */
+    String SCRET_PASSWORD="XIABIQING";
+    /**
+     * 用户登录态
+     */
     String USER_LOGIN_STATUS = "user_login_status";
     /**
      * 学生 0

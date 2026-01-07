@@ -78,16 +78,28 @@ public class UserStudentServiceImpl extends ServiceImpl<UserStudentMapper, UserS
         if (user == null) {
             throw new BusinessException(ErrorCode.NO_LOGIN);
         }
+        /*
+        查询到所有的工作申请单
+         */
         QueryWrapper<JobApplication> jobApplicationQueryWrapper = new QueryWrapper<>();
         jobApplicationQueryWrapper.eq("stu_id", user.getId());
         List<JobApplication> jobList = jobApplicationService.list(jobApplicationQueryWrapper);
+        /*
+        通过工作申请单获取所有的兼职单外键recru_id
+         */
         List<Long> recruIdList = jobList.stream().map(JobApplication::getRecruId).toList();
         QueryWrapper<Recruitment> recruitmentQueryWrapper = new QueryWrapper<>();
         if(recruIdList.isEmpty()){
             return new HashSet<>();
         }
         recruitmentQueryWrapper.in("id", recruIdList);
+        /*
+        查询到所有的兼职单了（申请了工作的）
+         */
         List<Recruitment> list = recruitmentService.list(recruitmentQueryWrapper);
+        /*
+        也是过滤了一下商家id
+         */
         Set<Long> busUserIdList = list.stream().map(Recruitment::getBusIdRecru).collect(Collectors.toSet());
         QueryWrapper<UserBusiness> userBusinessQueryWrapper = new QueryWrapper<>();
         if(busUserIdList.isEmpty()){
@@ -95,11 +107,14 @@ public class UserStudentServiceImpl extends ServiceImpl<UserStudentMapper, UserS
         }
         // 修复：busIdRecru 是 User 表的ID，应该用 user_id_bus 字段查询 UserBusiness
         userBusinessQueryWrapper.in("user_id_bus", busUserIdList);
+        /*
+        查询到所有的商家了
+         */
         List<UserBusiness> busList = userBusinessService.list(userBusinessQueryWrapper);
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         HashSet<UserWithBusiness> userWithBusinesses = new HashSet<>();
         for (UserBusiness userBusiness : busList) {
-            // 修复：每次循环前清空查询条件
+            // 清空条件
             userQueryWrapper.clear();
             userQueryWrapper.eq("id", userBusiness.getUserIdBus());
             User newUser = userService.getOne(userQueryWrapper);

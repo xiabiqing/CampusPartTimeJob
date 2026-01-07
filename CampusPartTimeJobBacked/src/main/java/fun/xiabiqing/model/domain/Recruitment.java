@@ -18,7 +18,7 @@ import java.util.List;
  * 招聘表
  * @TableName recruitment
  */
-@TableName(value ="recruitment")
+@TableName(value ="recruitment", autoResultMap = true)
 @Data
 public class Recruitment implements Serializable {
     /**

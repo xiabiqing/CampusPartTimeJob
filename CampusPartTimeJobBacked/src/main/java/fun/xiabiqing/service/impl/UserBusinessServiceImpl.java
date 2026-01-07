@@ -90,11 +90,13 @@ public class UserBusinessServiceImpl extends ServiceImpl<UserBusinessMapper, Use
         JobApplication newJobApplication = new JobApplication();
         newJobApplication.setId(jobApplication.getId());
         if (choose) {
+            // 同意：状态设置为1（申请成功）
             newJobApplication.setStatus(UserConstant.SUCCESS);
             boolean result = jobApplicationService.updateById(newJobApplication);
             return result;
         }
-        newJobApplication.setStatus(UserConstant.FLAIL);
+        // 拒绝：状态设置为2（申请失败），根据JobApplication实体注释：0正在申请中 1申请成功 2申请失败
+        newJobApplication.setStatus(2);
         boolean result = jobApplicationService.updateById(newJobApplication);
         return result;
     }
@@ -104,6 +106,9 @@ public class UserBusinessServiceImpl extends ServiceImpl<UserBusinessMapper, Use
         User user = checkBus(request);
         Long userId = user.getId();
         QueryWrapper<Recruitment> recruitmentQueryWrapper = new QueryWrapper<>();
+        /*
+        通过外键关联查找对应商家的的所有兼职单
+         */
         recruitmentQueryWrapper.eq("bus_id_recru", userId);
         List<Recruitment> recruList = recruitmentService.list(recruitmentQueryWrapper);
         List<Long> recruIdList = recruList.stream().map(Recruitment::getId).toList();
@@ -111,20 +116,28 @@ public class UserBusinessServiceImpl extends ServiceImpl<UserBusinessMapper, Use
             return Set.of();
         }
         QueryWrapper<JobApplication> jobApplicationQueryWrapper = new QueryWrapper<>();
+         /*
+         获得这个商家所有兼职单的所有申请单
+          */
         jobApplicationQueryWrapper.in("recru_id", recruIdList);
         List<JobApplication> jobApplicationList = jobApplicationService.list(jobApplicationQueryWrapper);
+        /*
+        获取所有关联学生id的外键stu_id(一个学生可能申请多个，所以用set去重一下)
+         */
         Set<Long> stuIdList = jobApplicationList.stream().map(JobApplication::getStuId).collect(Collectors.toSet());
         QueryWrapper<UserStudent> userStudentQueryWrapper = new QueryWrapper<>();
         if(stuIdList.isEmpty()) {
             return Set.of();
         }
-        // 修复：使用 user_id_stu 字段，因为 stuIdList 是 User 表的ID
+        /*
+        查询到所有的学生记录了
+         */
         userStudentQueryWrapper.in("user_id_stu", stuIdList);
         List<UserStudent> stuList = userStudentService.list(userStudentQueryWrapper);
         QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
         HashSet<UserWithStudent> userWithStudents = new HashSet<>();
         for (UserStudent userStudent : stuList) {
-            // 修复：每次循环前清空查询条件
+            //每次清空查找，负责会拼接and条件
             userQueryWrapper.clear();
             userQueryWrapper.eq("id", userStudent.getUserIdStu());
             User newUser = userService.getOne(userQueryWrapper);
@@ -138,7 +151,6 @@ public class UserBusinessServiceImpl extends ServiceImpl<UserBusinessMapper, Use
             userWithStudent.setAge(userStudent.getAge());
             userWithStudent.setRole(newUser.getRole());
             userWithStudent.setGender(userStudent.getGender());
-            // 修复：从 userStudent 对象获取，而不是从 userWithStudent
             userWithStudent.setMajor(userStudent.getMajor());
             userWithStudent.setEmail(userStudent.getEmail());
             userWithStudent.setSelfIntroduction(userStudent.getSelfIntroduction());

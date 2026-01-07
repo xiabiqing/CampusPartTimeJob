@@ -104,15 +104,16 @@ const getStatusText = (status) => {
   const statusMap = {
     0: '申请中',
     1: '已通过',
-    2: '已拒绝'
+    2: '已拒绝',
+    '-1': '已拒绝'  // 兼容-1拒绝状态
   }
-  return statusMap[status] || '未知'
+  return statusMap[status] || statusMap[String(status)] || '未知'
 }
 
 // 获取状态类型
 const getStatusType = (status) => {
   if (status === 1) return 'success'
-  if (status === 2) return 'danger'
+  if (status === 2 || status === -1) return 'danger'  // 兼容-1和2两种拒绝状态
   return 'warning'
 }
 
@@ -193,6 +194,19 @@ const loadRecruitmentData = async () => {
     if (res && res.code === 200 && res.data) {
       const map = {}
       res.data.forEach(recruitment => {
+        // 处理tags字段，确保是数组格式
+        if (recruitment.tags && typeof recruitment.tags === 'string') {
+          try {
+            recruitment.tags = JSON.parse(recruitment.tags)
+          } catch (e) {
+            console.warn('解析tags失败:', recruitment.tags, e)
+            recruitment.tags = []
+          }
+        }
+        // 确保tags是数组
+        if (!Array.isArray(recruitment.tags)) {
+          recruitment.tags = []
+        }
         map[recruitment.id] = recruitment
       })
       recruitmentMap.value = map
